@@ -8,7 +8,7 @@ class Person(Candidate):
     def __init__(self, name: str):
         self._name = name
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return self._name
 
     def set_preferences(self, choices: Sequence[Candidate]) -> None:
@@ -16,15 +16,6 @@ class Person(Candidate):
 
     def get_preferences(self) -> Sequence[Candidate]:
         return self._choices
-
-    def prefer_over(self, left: Candidate, right: Candidate) -> bool:
-        for choice in self._choices:
-            if left == choice:
-                return True
-            if right == choice:
-                return False
-        # should not reach this
-        raise Exception("Given candidates not on list of preferences")
 
 class TestGeneral(TestCase):
     def setUp(self) -> None:
@@ -60,9 +51,31 @@ class TestCheckStability(TestCase):
         self._peter.set_preferences([self._mary, self._jane])
         self._jane.set_preferences([self._simon, self._peter])
         self._mary.set_preferences([self._peter, self._simon])
-        
+
         assert not check_stability([(self._simon, self._mary), (self._peter, self._jane)])
         assert check_stability([(self._simon, self._jane), (self._peter, self._mary)])
+
+    def test_stability_simple2(self) -> None:
+        self._simon.set_preferences([self._jane, self._mary])
+        self._peter.set_preferences([self._jane, self._mary])
+        self._jane.set_preferences([self._simon, self._peter])
+        self._mary.set_preferences([self._peter, self._simon])
+
+        assert not check_stability([(self._simon, self._mary), (self._peter, self._jane)])
+        assert check_stability([(self._simon, self._jane), (self._peter, self._mary)])
+
+    def test_stability_all_cases_stable(self) -> None:
+        self._simon.set_preferences([self._jane, self._mary])
+        self._peter.set_preferences([self._mary, self._jane])
+        self._jane.set_preferences([self._peter, self._simon])
+        self._mary.set_preferences([self._simon, self._peter])
+
+        assert check_stability([(self._simon, self._mary), (self._peter, self._jane)])
+        assert check_stability([(self._simon, self._jane), (self._peter, self._mary)])
+
+    def test_stability_empty(self) -> None:
+        assert check_stability([])
+        assert check_stability(generate_stable_pairs([], []))
 
     def test_stability_random(self) -> None:
         num_trial = 100
@@ -135,11 +148,6 @@ class TestMoreThanOnePosibility(TestCase):
         self.nIsTwo['Peter'].set_preferences([self.nIsTwo['Mary'], self.nIsTwo['Jane']])
         self.nIsTwo['Jane'].set_preferences([self.nIsTwo['Peter'], self.nIsTwo['Simon']])
         self.nIsTwo['Mary'].set_preferences([self.nIsTwo['Simon'], self.nIsTwo['Peter']])
-        
-        left = [self.nIsTwo['Simon'], self.nIsTwo['Peter']]
-        right = [self.nIsTwo['Jane'], self.nIsTwo['Mary']]
-        pairs: Sequence[Pair] = generate_stable_pairs(left, right)
-        assert check_stability(pairs)
 
     def test_stable_result_for_two(self) -> None:
         left = [self.nIsTwo['Simon'], self.nIsTwo['Peter']]

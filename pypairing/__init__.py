@@ -4,13 +4,19 @@ from typing import Sequence, Tuple, Dict, Set
 import random
 
 class Candidate(ABC):
-    @abstractmethod
-    def prefer_over(self, left: Candidate, right: Candidate) -> bool:
-        pass
 
     @abstractmethod
     def get_preferences(self) -> Sequence[Candidate]:
         pass
+
+    def prefer_over(self, left: Candidate, right: Candidate) -> bool:
+        for choice in self.get_preferences():
+            if left == choice:
+                return True
+            if right == choice:
+                return False
+        # should not reach this
+        raise Exception("Given candidates not on list of preferences")
 
 Pair = Tuple[Candidate, Candidate]
 
