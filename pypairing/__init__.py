@@ -37,7 +37,8 @@ def check_stability(pairs: Sequence[Pair]) -> bool:
                 return False
     return True
 
-def generate_stable_pairs(group_a: Sequence[Candidate], group_b: Sequence[Candidate]) -> Sequence[Pair]:
+def generate_stable_pairs(group_a: Sequence[Candidate], group_b: Sequence[Candidate], seed=None) -> Sequence[Pair]:
+    random.seed(seed)
     free_a = set(group_a)
     free_b = set(group_b)
 

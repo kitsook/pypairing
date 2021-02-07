@@ -30,6 +30,9 @@ class TestGeneral(TestCase):
         self.nIsTwo['Jane'].set_preferences([self.nIsTwo['Simon'], self.nIsTwo['Peter']])
         self.nIsTwo['Mary'].set_preferences([self.nIsTwo['Simon'], self.nIsTwo['Peter']])
 
+    def test_empty(self) -> None:
+        assert len(generate_stable_pairs([], [])) == 0
+
     def test_candidate_creation(self) -> None:
         assert self.nIsTwo['Simon'].prefer_over(self.nIsTwo['Jane'], self.nIsTwo['Mary'])
         assert not self.nIsTwo['Simon'].prefer_over(self.nIsTwo['Mary'], self.nIsTwo['Jane'])
@@ -80,10 +83,10 @@ class TestCheckStability(TestCase):
     def test_stability_random(self) -> None:
         num_trial = 100
         max_pair = 50
-        for _ in range(10, num_trial):
+        for _ in range(0, num_trial):
             a_list = []
             b_list = []
-            count = random.randrange(max_pair)
+            count = random.randrange(10, max_pair)
             # create candidates in two lists
             for i in range(count):
                 a_list.append(Person("a_"+str(i)))
@@ -154,3 +157,36 @@ class TestMoreThanOnePosibility(TestCase):
         right = [self.nIsTwo['Jane'], self.nIsTwo['Mary']]
         pairs: Sequence[Pair] = generate_stable_pairs(left, right)
         assert check_stability(pairs)
+
+class TestSameSeedProduceSameResult(TestCase):
+    def setUp(self) -> None:
+        self.a_list = []
+        self.b_list = []
+        self.count = 20
+
+        # create candidates in two lists
+        for i in range(0, self.count):
+            self.a_list.append(Person("a_"+str(i)))
+            self.b_list.append(Person("b_"+str(i)))
+        # randomly set prefernces for each candidate
+        for a in self.a_list:
+            pref = self.b_list[:]
+            random.shuffle(pref)
+            a.set_preferences(pref)
+        for b in self.b_list:
+            pref = self.a_list[:]
+            random.shuffle(pref)
+            b.set_preferences(pref)
+
+    def test_same_seed(self) -> None:
+        seed = 42
+        prev_result = None
+        for _ in range(0, 100):
+            pairs = generate_stable_pairs(self.a_list, self.b_list, seed)
+            if prev_result:
+                assert prev_result == pairs
+            prev_result = pairs
+            assert len(pairs) == self.count
+            assert len(set([a for a, b in pairs])) == self.count
+            assert len(set([b for a, b in pairs])) == self.count
+            assert check_stability(pairs)
